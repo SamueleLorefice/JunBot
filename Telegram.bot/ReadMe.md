@@ -1,1 +1,0 @@
-﻿This is a conversion of the telegram.bot library to make it compile on linux.
