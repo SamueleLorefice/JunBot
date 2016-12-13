@@ -1,45 +1,60 @@
 ﻿using System;
-//Settings File specific
-using Newtonsoft.Json;
+using System.IO;
+//using Newtonsoft.Json;
+
 //BotApi specific
 using Telegram.Bot;
 using Telegram.Bot.Args;
-using Telegram.Bot.Types;
+//using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using Telegram.Bot.Types.InlineQueryResults;
-using Telegram.Bot.Types.InputMessageContents;
-using Telegram.Bot.Types.ReplyMarkups;
+//using Telegram.Bot.Types.InlineQueryResults;
+//using Telegram.Bot.Types.InputMessageContents;
+//using Telegram.Bot.Types.ReplyMarkups;
 
 
 namespace Jun
 {
 	static class MainClass
 	{
-		static string settingsFile = "Settings.Json";
+		//static string settingsFile = "Settings.Json";
 		static Settings settings;
         static TelegramBotClient Bot;
 
         public static void Main (string[] args)
 		{
-            string token = System.IO.File.ReadAllText("token");
-            Bot = new TelegramBotClient(token);
+            //checks if the token file exists and reads it, otherwise creates it.
+            if (File.Exists("token"))
+            {
+                string token = System.IO.File.ReadAllText("token");
+                if (token == string.Empty){
+                    System.Console.WriteLine("No token found in the file. Please put your bot token on the token file and restart this program.");
+                    Console.ReadLine();
+                    return;
+                }
 
-            //delegates here
-            Bot.OnMessage += Ping;
+                Bot = new TelegramBotClient(token);
 
-            var me = Bot.GetMeAsync().Result;
-            Console.Title = me.Username;
+                //delegates here
+                Bot.OnMessage += Ping;
 
-            Bot.StartReceiving();
-            Console.ReadLine();
-            Bot.StopReceiving();
+                var me = Bot.GetMeAsync().Result;
+                Console.Title = me.Username;
+
+                Bot.StartReceiving();
+                Console.ReadLine();
+                Bot.StopReceiving();
+            }else{
+                File.Create("token");
+                System.Console.WriteLine("Please put your bot token on the token file and restart this program.");
+                Console.ReadLine();
+            }
 		}
 
         static async void Ping(object sender, MessageEventArgs e) {
             if (e.Message == null || e.Message.Type != MessageType.TextMessage) return;
             string message = e.Message?.Text;
             if (message?.ToLower() == "ping")
-                await Bot.SendTextMessageAsync(e.Message.Chat.Id, "YEEEEEEY I''m ALIVE!");
+                await Bot.SendTextMessageAsync(e.Message.Chat.Id, "I'm up and running!");
         }
     }
 }
