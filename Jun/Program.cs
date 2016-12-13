@@ -36,6 +36,7 @@ namespace Jun
 
                 //delegates here
                 Bot.OnMessage += Ping;
+                Bot.OnMessage += AutoUpdate;
 
                 var me = Bot.GetMeAsync().Result;
                 Console.Title = me.Username;
@@ -56,5 +57,13 @@ namespace Jun
             if (message?.ToLower() == "ping")
                 await Bot.SendTextMessageAsync(e.Message.Chat.Id, "I'm up and running!");
         }
+
+        static async void AutoUpdate(object sender, MessageEventArgs e) {
+          if (e.Message == null || e.Message.Type != MessageType.TextMessage) return;
+            string message = e.Message?.Text;
+            if (message?.ToLower() == "/autoupdate"){
+                await Bot.SendTextMessageAsync(e.Message.Chat.Id, "Beginning autoupdate procedure! \n *NOTE:* _This is a stub and will change soon_", parseMode:ParseMode.Markdown);
+            }
+         }
     }
 }
