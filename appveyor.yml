@@ -1,0 +1,10 @@
+version: 1.0.{build}
+configuration: Debug
+before_build:
+- cmd: nuget restore
+build:
+  parallel: true
+  verbosity: minimal
+artifacts:
+- path: '\Jun\bin\Debug'
+  name: JunBot
