@@ -20,26 +20,42 @@ namespace Jun
 
 		public static void Main (string[] args)
 		{
+			#region Configuration file
 			//configuration down here
 			if (System.IO.File.Exists(settingsFile)){
 				//gets token and other infos
-				settings = JsonConvert.DeserializeObject<Settings>(settingsFile);
+				try {
+					settings = JsonConvert.DeserializeObject<Settings>(settingsFile);
+				} catch (JsonException e) {
+					Console.WriteLine ("Error deserializing settings file.\n"+e.Message);
+				}
 			}else{
 				try{
 					settings = new Settings("", 0);
 					string _out = JsonConvert.SerializeObject(settings, Formatting.Indented);
-					System.IO.File.Create(settingsFile);
+					//System.IO.File.Create(settingsFile);
 					System.IO.File.WriteAllText(settingsFile, _out);
 				}catch(Exception e){
-					Console.WriteLine("Unable to create/save settings file.");
-					Environment.Exit(1);
+					Console.WriteLine("Unable to create/save settings file.\n"+e.Message);
+				}finally{
+					Environment.Exit (1);
 				}
 			}
+			#endregion
 
 			//telegram.bot related down here
 			TelegramBotClient Bot = new TelegramBotClient(settings.token);
+
+			//dekegates here
+			Bot.OnMessage += Ping;
+
 			var me = Bot.GetMeAsync().Result;
             Console.Title = me.Username;
+		}
+
+		static void Ping(object sender, MessageEventArgs e)
+		{
+			
 		}
 	}
 }
