@@ -1,15 +1,24 @@
 ﻿using System;
+using System.Collections.Generic;
+using Telegram.Bot.Types;
 
 namespace Jun
 {
 	public class Settings
 	{
-		//token of the bot
-		public string token {get; set;}
-		//id of the creator
-		public long ownerID {get; set;}
-
-		public Settings(string tok, long ownID){
+        //--------------------------
+        public string token {get; set;}
+        public User BotIdentity { get; set; }
+        //--------------------------
+        public EPErsonality BotPersonality { get; set; }
+        public SPersonalityStats BotStats { get; set; }
+        //id of the creator
+        public long MasterID { get; set; }
+        public long ownerID {get; set;}
+        public List<SUserStats> UserList { get; set; }
+        //--------------------------
+        //Constructor
+        public Settings(string tok, long ownID){
 			token = tok;
 			ownID = ownerID;
 		}

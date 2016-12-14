@@ -30,6 +30,12 @@
     <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Personality\EPersonality.cs" />
+    <Compile Include="Personality\SPersonalityConfig.cs" />
+    <Compile Include="Personality\SBanInfo.cs" />
+    <Compile Include="Personality\SPersonalityStats.cs" />
+    <Compile Include="Personality\SUserEmotion.cs" />
+    <Compile Include="Personality\SUserStats.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Settings.cs" />
