@@ -19,7 +19,7 @@ namespace Jun
         //Constructor
         public Settings(string tok, long ownID){
 			token = tok;
-			ownID = ownerID;
+			ownID = MasterID;
 		}
 	}
 }

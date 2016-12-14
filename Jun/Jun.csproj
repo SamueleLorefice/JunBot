@@ -58,7 +58,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <None Include=".travis.yml" />
     <None Include="app.config" />
     <None Include="packages.config" />
   </ItemGroup>
