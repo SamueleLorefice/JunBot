@@ -1,6 +1,10 @@
 version: 0.0.{build}.{branch}
 pull_requests:
   do_not_increment_build_number: true
+branches:
+  only:
+  - master
+  - /release/
 skip_tags: true
 configuration: Debug
 before_build:
