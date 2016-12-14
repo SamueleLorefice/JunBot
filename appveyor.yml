@@ -1,4 +1,6 @@
-version: 1.0.{build}
+version: 0.0.{build}.{branch}
+pull_requests:
+  do_not_increment_build_number: true
 configuration: Debug
 before_build:
 - cmd: nuget restore
@@ -7,4 +9,13 @@ build:
   verbosity: minimal
 artifacts:
 - path: '\Jun\bin\Debug'
-  name: JunBot
+  name: Jun
+deploy:
+- provider: GitHub
+  tag: v$(appveyor_build_version)
+  release: JunBot v$(appveyor_build_version)
+  description: Automated Build from appveyor
+  auth_token:
+    secure: JMlbS23ImKlwOkRFvxdwjAq5cxlG7MEHoI41pIvibt9UP2Pjx3ryVhD4IzcqHcz0
+  artifact: Jun
+  prerelease: false

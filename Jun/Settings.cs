@@ -14,7 +14,6 @@ namespace Jun
         public SPersonalityStats BotStats { get; set; }
         //id of the creator
         public long MasterID { get; set; }
-        public long ownerID {get; set;}
         public List<SUserStats> UserList { get; set; }
         //--------------------------
         //Constructor

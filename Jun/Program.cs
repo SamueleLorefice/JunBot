@@ -22,6 +22,7 @@ namespace Jun
 
         public static void Main (string[] args)
 		{
+            #region Token
             //checks if the token file exists and reads it, otherwise creates it.
             if (File.Exists("token"))
             {
@@ -50,6 +51,7 @@ namespace Jun
                 Console.ReadLine();
             }
 		}
+        #endregion
 
         static async void Ping(object sender, MessageEventArgs e) {
             if (e.Message == null || e.Message.Type != MessageType.TextMessage) return;
@@ -61,7 +63,7 @@ namespace Jun
         static async void AutoUpdate(object sender, MessageEventArgs e) {
           if (e.Message == null || e.Message.Type != MessageType.TextMessage) return;
             string message = e.Message?.Text;
-            if (message?.ToLower() == "/autoupdate"){
+            if (message?.ToLower() == "/autoupdate" && e.Message.From.Id == settings.MasterID){
                 await Bot.SendTextMessageAsync(e.Message.Chat.Id, "Beginning autoupdate procedure! \n *NOTE:* _This is a stub and will change soon_", parseMode:ParseMode.Markdown);
             }
          }
