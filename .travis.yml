@@ -1,2 +1,6 @@
 ﻿language: csharp
 solution: JunBot.sln
+before_script:
+  - nuget restore JunBot.sln
+script:
+  - xbuild /p:Configuration=Release JunBot.sln
