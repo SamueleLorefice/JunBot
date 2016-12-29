@@ -6,6 +6,6 @@ using System.Threading.Tasks;
 
 namespace Jun {
     public struct SUserEmotion {
-
+        
     }
 }

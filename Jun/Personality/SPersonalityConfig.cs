@@ -7,5 +7,6 @@ using System.Threading.Tasks;
 namespace Jun {
     public struct SPersonalityConfig {
         public long MasterId { get; set; }
+
     }
 }
