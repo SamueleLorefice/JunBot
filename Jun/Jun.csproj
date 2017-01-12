@@ -31,6 +31,7 @@
     <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="LoggedUser.cs" />
     <Compile Include="Personality\EPersonality.cs" />
     <Compile Include="Personality\PersonalityEnums.cs" />
     <Compile Include="Personality\SActualState.cs" />

@@ -11,6 +11,8 @@ using Telegram.Bot;
 using Telegram.Bot.Args;
 //using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types;
+using Newtonsoft.Json;
 //using Telegram.Bot.Types.InlineQueryResults;
 //using Telegram.Bot.Types.InputMessageContents;
 //using Telegram.Bot.Types.ReplyMarkups;
@@ -24,17 +26,22 @@ namespace Jun {
         static Queue<long> KonachanQueueId = new Queue<long>();
 
         public static void Main(string[] args) {
-            #region Token
+            #region Settings
             //checks if the token file exists and reads it, otherwise creates it.
-            if (File.Exists("token")) {
-                string token = System.IO.File.ReadAllText("token");
-                if (token == string.Empty) {
-                    System.Console.WriteLine("No token found in the file. Please put your bot token on the token file and restart this program.");
-                    Console.ReadLine();
+            if (System.IO.File.Exists("bot.cfg")) {
+                try {
+                    string cfg = System.IO.File.ReadAllText("token");
+                    Settings CFG = JsonConvert.DeserializeObject<Settings>(cfg);
+                } catch (JsonReaderException) {
+                    System.IO.File.Delete("bot.cfg");
                     return;
                 }
+            }else {
+                System.IO.File.AppendAllText("bot.cfg", JsonConvert.SerializeObject(new Settings("token here", 0), Formatting.Indented));
+                return;
+            }
 
-                Bot = new TelegramBotClient(token);
+                Bot = new TelegramBotClient(settings?.token);
 
                 //delegates here
                 Bot.OnMessage += Ping;
@@ -47,14 +54,8 @@ namespace Jun {
                 Bot.StartReceiving();
                 Console.ReadLine();
                 Bot.StopReceiving();
-            } else {
-                File.Create("token");
-                System.Console.WriteLine("Please put your bot token on the token file and restart this program.");
-                Console.ReadLine();
-            }
             #endregion
         }
-
 
         static async void Ping(object sender, MessageEventArgs e) {
             if (e.Message == null || e.Message.Type != MessageType.TextMessage) return;
