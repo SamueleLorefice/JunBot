@@ -8,31 +8,62 @@ using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 
 namespace Jun {
-    class MainClass {
+    static class MainClass {
         static Settings config;
         static TelegramBotClient Bot;
 
         public static void Main(string[] args) {
             if (!LoadSettings()) return;
-            #region Bot Setup
             Bot = new TelegramBotClient(config?.Token);
             //COMMAND REGISTRATION
-            Bot.OnMessage += Ping;
-
+            Bot.OnMessage += ChatModule;
+            Bot.OnMessage += ChatModuleAdministration;
             //Startup
             var me = Bot.GetMeAsync().Result;
             Console.Title = me.Username;
             Bot.StartReceiving();
             Console.ReadLine();
             Bot.StopReceiving();
-            #endregion
         }
 
-        static async void Ping(object sender, MessageEventArgs e) {
+        static void ChatModule(object sender, MessageEventArgs e) {
             if (e.Message == null || e.Message.Type != MessageType.TextMessage) return;
             string message = e.Message?.Text;
-            if (message?.ToLower() == "ping" || message?.ToLower() == "/ping")
-                await Bot.SendTextMessageAsync(e.Message.Chat.Id, "Mhh, si sono online!");
+            if (config.TriggerAnswers == null) return;
+            Parallel.ForEach(config.TriggerAnswers, (currTrigger) => {
+                foreach (string trigger in currTrigger.Triggers) {
+                    if (Regex.IsMatch(message, String.Format("({0})", trigger))) {
+                        if (!currTrigger.MasterOnly) {
+                            ChatSendResponse(currTrigger.Answers, e.Message.Chat.Id, currTrigger.Parsing);
+                        } else if (config.MasterID == e.Message.From.Id) {
+                            ChatSendResponse(currTrigger.Answers, e.Message.Chat.Id, currTrigger.Parsing);
+                        }
+                    }
+                }
+            });
+        }
+
+        private static async void ChatSendResponse(List<string> answers, long chatId, ParseMode parseMode) {
+            int pick = new Random().Next(answers.Count);
+            await Bot.SendTextMessageAsync(chatId, answers[pick], parseMode: parseMode);
+        }
+
+        static async void ChatModuleAdministration(object sender, MessageEventArgs e) {
+            //                                       triggers                        answers                 
+            //syntax: /chatmodule <command> <argument list separed by \> | <argument list separed by \> | <master only> / <parse mode>
+            //ADD: (\/chatmodule )(add )([^|]+)(\|[^|]+)(\|true|\|false){0,1}(\|none|\|html|\|markdown){0,1}
+            if (e.Message == null || e.Message.Type != MessageType.TextMessage || e.Message.From.Id != config.MasterID) return;
+            if (Regex.IsMatch(e.Message.Text, @"(\/chatmodule add )([^|]+)\|([^|]+)\|{0,1}(true|false){0,1}\|(none|html|markdown){0,1}", RegexOptions.IgnoreCase)) {
+                Match match = Regex.Match(e.Message.Text, @"(\/chatmodule add )([^|]+)\|([^|]+)\|{0,1}(true|false){0,1}\|(none|html|markdown){0,1}", RegexOptions.IgnoreCase);
+                config.TriggerAnswers.Add(new TriggerAnswer {
+                    Triggers = new List<string>(match.Groups[2].Value.Split('\\')),
+                    Answers = new List<string>(match.Groups[3].Value.Split('\\')),
+                    MasterOnly = match.Groups[4].Value.ToBool(),
+                    Parsing = match.Groups[5].Value.ToParseMode()
+                });
+                System.IO.File.WriteAllText("bot.cfg", JsonConvert.SerializeObject(config, Formatting.Indented));
+                await Bot.SendTextMessageAsync(e.Message.Chat.Id, "Aggiunto alla configurazione con successo!");
+            }
         }
 
         static async void AutoUpdate(object sender, MessageEventArgs e) {
@@ -44,30 +75,13 @@ namespace Jun {
             }
         }
 
-        static void ChatModule(object sender, MessageEventArgs e) {
-            if (e.Message == null || e.Message.Type != MessageType.TextMessage) return;
-            string message = e.Message?.Text;
-            Parallel.ForEach(config.TriggerAnswers, (currTrigger) => {
-                foreach (string trigger in currTrigger.Triggers) {
-                    if (Regex.IsMatch(message, String.Format("({0})\\w+", trigger))) {
-                        ChatSendResponse(currTrigger.Answers, e.Message.Chat.Id, currTrigger.Parsing);
-                    }
-                }
-            });
-        }
-
-        private static async void ChatSendResponse(List<string> answers, long chatId, ParseMode parseMode) {
-            int pick = new Random().Next(answers.Count);
-            await Bot.SendTextMessageAsync(chatId, answers[pick], parseMode: parseMode);
-        }
-
-
         //checks if the token file exists and reads it, otherwise creates it.
         static bool LoadSettings() {
             if (System.IO.File.Exists("bot.cfg")) {
                 try {
                     string cfg = System.IO.File.ReadAllText("bot.cfg");
                     config = JsonConvert.DeserializeObject<Settings>(cfg);
+                    if (config.TriggerAnswers == null) config.TriggerAnswers = new List<TriggerAnswer>();
                 } catch (JsonReaderException) {
                     System.IO.File.Delete("bot.cfg");
                     return false;
@@ -78,5 +92,23 @@ namespace Jun {
             }
             return true;
         }
+
+
+        #region string extensions
+        static bool ToBool(this string s) {
+            if (s.ToLower() == "true") return true;
+            return false;
+        }
+        static ParseMode ToParseMode(this string s) {
+            switch (s.ToLower()) {
+                case "html":
+                    return ParseMode.Html;
+                case "markdown":
+                    return ParseMode.Markdown;
+                default:
+                    return ParseMode.Default;
+            }
+        }
+        #endregion
     }
 }

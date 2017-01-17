@@ -14,7 +14,7 @@ namespace Jun {
         //--------------------------
         public User BotIdentity { get; set; }
         //--------------------------
-        [JsonProperty(PropertyName = "trigger_Answers", Required = Required.AllowNull)]
+        [JsonProperty(PropertyName = "trigger_answers", Required = Required.AllowNull)]
         public List<TriggerAnswer> TriggerAnswers { get; set; }
         //--------------------------
         [JsonProperty(PropertyName = "blacklist", Required = Required.AllowNull)]
@@ -29,9 +29,9 @@ namespace Jun {
 
     public class TriggerAnswer {
         [JsonProperty(PropertyName = "triggers_list", Required = Required.Always)]
-        public List<string> Triggers { get; set; }
+        public List<string> Triggers { get; set; } = new List<string>();
         [JsonProperty(PropertyName = "answers_list", Required = Required.Always)]
-        public List<string> Answers { get; set; }
+        public List<string> Answers { get; set; } = new List<string>();
         [JsonProperty(PropertyName = "parse_mode", Required = Required.AllowNull)]
         public ParseMode Parsing { get; set; }
         [JsonProperty(PropertyName = "master_only", Required = Required.Always)]
