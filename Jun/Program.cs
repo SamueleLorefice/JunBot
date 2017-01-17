@@ -12,6 +12,7 @@ namespace Jun {
     static class MainClass {
         static Settings config;
         static TelegramBotClient Bot;
+        static Stopwatch Uptime = new Stopwatch();
 
         public static void Main(string[] args) {
             Console.WriteLine("Starting TelegramBot");
@@ -21,8 +22,8 @@ namespace Jun {
             Console.WriteLine("Registering commands");
             Bot.OnMessage += ChatModule;
             Bot.OnMessage += ChatModuleAdministration;
+            Bot.OnMessage += UptimeCmd;
             Console.WriteLine("Completing startup");
-            Stopwatch Uptime = new Stopwatch();
             Uptime.Start();
             //Startup
             var me = Bot.GetMeAsync().Result;
@@ -30,6 +31,14 @@ namespace Jun {
             Bot.StartReceiving();
             Console.ReadLine();
             Bot.StopReceiving();
+        }
+
+        static async void UptimeCmd(object sender, MessageEventArgs e) {
+            if (e.Message == null || e.Message.Type != MessageType.TextMessage) return;
+            string message = e.Message?.Text;
+            if (message == "/uptime") {
+                await Bot.SendTextMessageAsync(e.Message.Chat.Id, String.Format("Sono online da: `{0}`d `{1}`h `{2}`m `{3}`s", Uptime.Elapsed.Days, Uptime.Elapsed.Hours, Uptime.Elapsed.Minutes, Uptime.Elapsed.Seconds), parseMode: ParseMode.Markdown);
+            }
         }
 
         static void ChatModule(object sender, MessageEventArgs e) {
@@ -101,7 +110,7 @@ namespace Jun {
             }
             #endregion
             s.Stop();
-            if (Regex.IsMatch(e.Message.Text, @"(\/chatmodule list)", RegexOptions.IgnoreCase)) {
+            if (Regex.IsMatch(e.Message.Text, @"(\/chatmodule stats)", RegexOptions.IgnoreCase)) {
                 int total_triggers = 0;
                 int total_answers = 0;
                 long config_size = new System.IO.FileInfo("bot.cfg").Length;
@@ -109,7 +118,7 @@ namespace Jun {
                     total_answers += pair.Answers.Count;
                     total_triggers += pair.Triggers.Count;
                 }
-                await Bot.SendTextMessageAsync(e.Message.Chat.Id, String.Format("Momento di statistica...\n*Numero di trigger* `{0}`\n*Numero di Risposte* `{1}`\n*Dimensione file configurazione* `{2}`B", total_triggers, total_answers, config_size),parseMode: ParseMode.Markdown);
+                await Bot.SendTextMessageAsync(e.Message.Chat.Id, String.Format("Momento di statistica...\n*Numero di trigger* `{0}`\n*Numero di risposte* `{1}`\n*Dimensione file configurazione* `{2}`B", total_triggers, total_answers, config_size),parseMode: ParseMode.Markdown);
             }
         }
 
