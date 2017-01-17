@@ -73,7 +73,7 @@ namespace Jun {
                     Parsing = match.Groups[5].Value.ToParseMode()
                 });
                 System.IO.File.WriteAllText("bot.cfg", JsonConvert.SerializeObject(config, Formatting.Indented));
-                await Bot.SendTextMessageAsync(e.Message.Chat.Id, "Aggiunto alla configurazione con successo!, Tempo richiesto per l'operazione: "+s.ElapsedMilliseconds+"ms");
+                await Bot.SendTextMessageAsync(e.Message.Chat.Id, "Aggiunto alla configurazione con successo!, Tempo richiesto per l'operazione: " + s.ElapsedMilliseconds + "ms");
             }
             #endregion
             s.Restart();
@@ -81,7 +81,23 @@ namespace Jun {
             if (Regex.IsMatch(e.Message.Text, @"(\/chatmodule reload)", RegexOptions.IgnoreCase)) {
                 await Bot.SendTextMessageAsync(e.Message.Chat.Id, "Ok master, ricarico subito la configurazione!");
                 LoadSettings();
-                await Bot.SendTextMessageAsync(e.Message.Chat.Id, "Fatto!, Tempo richiesto per l'operazione: " + s.ElapsedMilliseconds+"ms");
+                await Bot.SendTextMessageAsync(e.Message.Chat.Id, "Fatto!, Tempo richiesto per l'operazione: " + s.ElapsedMilliseconds + "ms");
+            }
+            #endregion
+            s.Restart();
+            #region Remove
+            if (Regex.IsMatch(e.Message.Text, @"(\/chatmodule remove )([^|]+)\|", RegexOptions.IgnoreCase)) {
+                var match = Regex.Match(e.Message.Text, @"(\/chatmodule remove )([^|]+)\|", RegexOptions.IgnoreCase);
+                for (int i = 0; i < config.TriggerAnswers.Count-1; i++) {
+                    foreach (var trigger in config.TriggerAnswers[i].Triggers) {
+                        if (trigger == match.Groups[2].Value) {
+                            config.TriggerAnswers.Remove(config.TriggerAnswers[i]);
+                            await Bot.SendTextMessageAsync(e.Message.Chat.Id, "Rimosso dalla configurazione con successo!, Tempo richiesto per l'operazione: " + s.ElapsedMilliseconds + "ms");
+                        }
+                    }
+                }
+                System.IO.File.WriteAllText("bot.cfg", JsonConvert.SerializeObject(config, Formatting.Indented));
+                
             }
             #endregion
             s.Stop();
