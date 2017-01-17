@@ -101,6 +101,16 @@ namespace Jun {
             }
             #endregion
             s.Stop();
+            if (Regex.IsMatch(e.Message.Text, @"(\/chatmodule list)", RegexOptions.IgnoreCase)) {
+                int total_triggers = 0;
+                int total_answers = 0;
+                long config_size = new System.IO.FileInfo("bot.cfg").Length;
+                foreach (var pair in config.TriggerAnswers) {
+                    total_answers += pair.Answers.Count;
+                    total_triggers += pair.Triggers.Count;
+                }
+                await Bot.SendTextMessageAsync(e.Message.Chat.Id, String.Format("Momento di statistica...\n*Numero di trigger* `{0}`\n*Numero di Risposte* `{1}`\n*Dimensione file configurazione* `{2}`B", total_triggers, total_answers, config_size),parseMode: ParseMode.Markdown);
+            }
         }
 
         static async void AutoUpdate(object sender, MessageEventArgs e) {
