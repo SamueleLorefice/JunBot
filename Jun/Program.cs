@@ -14,11 +14,16 @@ namespace Jun {
         static TelegramBotClient Bot;
 
         public static void Main(string[] args) {
+            Console.WriteLine("Starting TelegramBot");
             if (!LoadSettings()) return;
             Bot = new TelegramBotClient(config?.Token);
             //COMMAND REGISTRATION
+            Console.WriteLine("Registering commands");
             Bot.OnMessage += ChatModule;
             Bot.OnMessage += ChatModuleAdministration;
+            Console.WriteLine("Completing startup");
+            Stopwatch Uptime = new Stopwatch();
+            Uptime.Start();
             //Startup
             var me = Bot.GetMeAsync().Result;
             Console.Title = me.Username;
