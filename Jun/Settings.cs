@@ -12,8 +12,6 @@ namespace Jun {
         [JsonProperty(PropertyName = "owner_id", Required = Required.AllowNull)]
         public long MasterID { get; set; }
         //--------------------------
-        public User BotIdentity { get; set; }
-        //--------------------------
         [JsonProperty(PropertyName = "trigger_answers", Required = Required.AllowNull)]
         public List<TriggerAnswer> TriggerAnswers { get; set; }
         //--------------------------
@@ -35,7 +33,8 @@ namespace Jun {
         [JsonProperty(PropertyName = "parse_mode", Required = Required.AllowNull)]
         public ParseMode Parsing { get; set; }
         [JsonProperty(PropertyName = "master_only", Required = Required.Always)]
-        public bool MasterOnly { get; set; }
+        public CommandRestiction MasterOnly { get; set; }
+
     }
 
     public class BlackListedUser : User{
@@ -49,5 +48,11 @@ namespace Jun {
         public new string Username { get; set; }
         [JsonProperty(PropertyName = "ban_ends", Required = Required.AllowNull)]
         DateTime BanEnd { get; set; }
+    }
+
+    public enum CommandRestiction {
+        All,
+        MasterOnly,
+        NotMaster
     }
 }
