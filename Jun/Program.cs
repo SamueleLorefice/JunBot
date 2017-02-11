@@ -66,15 +66,16 @@ namespace Jun {
         }
 
         static async void ChatModuleAdministration(object sender, MessageEventArgs e) {
-            //                                       triggers                        answers                 
-            //syntax: /chatmodule <command> <argument list separed by \> | <argument list separed by \> | <master only> / <parse mode>
-            //ADD: (\/chatmodule )(add )([^|]+)(\|[^|]+)(\|true|\|false){0,1}(\|none|\|html|\|markdown){0,1}
+            var message = e.Message.Text.ToLower();
             Stopwatch s = new Stopwatch();
             if (e.Message == null || e.Message.Type != MessageType.TextMessage || e.Message.From.Id != config.MasterID) return;
+
             s.Start();
             #region ADD
-            if (Regex.IsMatch(e.Message.Text, @"(\/chatmodule add )([^|]+)\|([^|]+)\|{0,1}(true|false){0,1}\|(none|html|markdown){0,1}", RegexOptions.IgnoreCase)) {
-                Match match = Regex.Match(e.Message.Text, @"(\/chatmodule add )([^|]+)\|([^|]+)\|{0,1}(all|masteronly|notmaster){0,1}\|(none|html|markdown){0,1}", RegexOptions.IgnoreCase);
+            //                                       triggers                        answers                 
+            //syntax: /chatmodule <command> <argument list separed by \> | <argument list separed by \> | <master only> / <parse mode>
+            if (Regex.IsMatch(message, @"(\/chatmodule add )([^|]+)\|([^|]+)\|{0,1}(true|false){0,1}\|(none|html|markdown){0,1}", RegexOptions.IgnoreCase)) {
+                var match = Regex.Match(e.Message.Text, @"(\/chatmodule add )([^|]+)\|([^|]+)\|{0,1}(all|masteronly|notmaster){0,1}\|(none|html|markdown){0,1}", RegexOptions.IgnoreCase);
                 config.TriggerAnswers.Add(new TriggerAnswer {
                     Triggers = new List<string>(match.Groups[2].Value.Split('\\')),
                     Answers = new List<string>(match.Groups[3].Value.Split('\\')),
@@ -86,16 +87,18 @@ namespace Jun {
             }
             #endregion
             s.Restart();
+
             #region Reload
-            if (Regex.IsMatch(e.Message.Text, @"(\/chatmodule reload)", RegexOptions.IgnoreCase)) {
+            if (Regex.IsMatch(message, @"(\/chatmodule reload)", RegexOptions.IgnoreCase)) {
                 await Bot.SendTextMessageAsync(e.Message.Chat.Id, "Ok master, ricarico subito la configurazione!");
                 LoadSettings();
                 await Bot.SendTextMessageAsync(e.Message.Chat.Id, "Fatto!, Tempo richiesto per l'operazione: " + s.ElapsedMilliseconds + "ms");
             }
             #endregion
             s.Restart();
+
             #region Remove
-            if (Regex.IsMatch(e.Message.Text, @"(\/chatmodule remove )([^|]+)\|", RegexOptions.IgnoreCase)) {
+            if (Regex.IsMatch(message, @"(\/chatmodule remove )([^|]+)\|", RegexOptions.IgnoreCase)) {
                 var match = Regex.Match(e.Message.Text, @"(\/chatmodule remove )([^|]+)\|", RegexOptions.IgnoreCase);
                 for (int i = 0; i < config.TriggerAnswers.Count-1; i++) {
                     foreach (var trigger in config.TriggerAnswers[i].Triggers) {
@@ -105,12 +108,12 @@ namespace Jun {
                         }
                     }
                 }
-                System.IO.File.WriteAllText("bot.cfg", JsonConvert.SerializeObject(config, Formatting.Indented));
-                
+                System.IO.File.WriteAllText("bot.cfg", JsonConvert.SerializeObject(config, Formatting.Indented));    
             }
             #endregion
             s.Stop();
-            if (Regex.IsMatch(e.Message.Text, @"(\/chatmodule stats)", RegexOptions.IgnoreCase)) {
+
+            if (Regex.IsMatch(message, @"(\/chatmodule stats)", RegexOptions.IgnoreCase)) {
                 int total_triggers = 0;
                 int total_answers = 0;
                 long config_size = new System.IO.FileInfo("bot.cfg").Length;
