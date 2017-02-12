@@ -1,18 +1,19 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
-using Newtonsoft.Json;
+using System.Diagnostics;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Telegram.Bot;
 using Telegram.Bot.Args;
 using Telegram.Bot.Types.Enums;
-using System.Threading.Tasks;
-using System.Text.RegularExpressions;
-using System.Diagnostics;
 
 namespace Jun {
-    static class MainClass {
-        static Settings config;
-        static TelegramBotClient Bot;
-        static Stopwatch Uptime = new Stopwatch();
+
+    internal static class MainClass {
+        private static Settings config;
+        private static TelegramBotClient Bot;
+        private static Stopwatch Uptime = new Stopwatch();
 
         public static void Main(string[] args) {
             Console.WriteLine("Starting TelegramBot");
@@ -33,15 +34,33 @@ namespace Jun {
             Bot.StopReceiving();
         }
 
-        static async void UptimeCmd(object sender, MessageEventArgs e) {
+        //checks if the token file exists and reads it, otherwise creates it.
+        private static bool LoadSettings() {
+            if (System.IO.File.Exists("bot.cfg")) {
+                try {
+                    string cfg = System.IO.File.ReadAllText("bot.cfg");
+                    config = JsonConvert.DeserializeObject<Settings>(cfg);
+                    if (config.TriggerAnswers == null) config.TriggerAnswers = new List<TriggerAnswer>();
+                } catch (JsonReaderException) {
+                    System.IO.File.Delete("bot.cfg");
+                    return false;
+                }
+            } else {
+                System.IO.File.AppendAllText("bot.cfg", JsonConvert.SerializeObject(new Settings("token here", 0), Formatting.Indented));
+                return false;
+            }
+            return true;
+        }
+
+        private static async void AutoUpdate(object sender, MessageEventArgs e) {
             if (e.Message == null || e.Message.Type != MessageType.TextMessage) return;
             string message = e.Message?.Text;
-            if (message == "/uptime") {
-                await Bot.SendTextMessageAsync(e.Message.Chat.Id, String.Format("Sono online da: `{0}`d `{1}`h `{2}`m `{3}`s", Uptime.Elapsed.Days, Uptime.Elapsed.Hours, Uptime.Elapsed.Minutes, Uptime.Elapsed.Seconds), parseMode: ParseMode.Markdown);
+            if (message?.ToLower() == "/autoupdate" && e.Message.From.Id == config.MasterID) {
+                await Bot.SendTextMessageAsync(e.Message.Chat.Id, "Beginning autoupdate procedure! \n *NOTE:* _This is a stub and will change soon_", parseMode: ParseMode.Markdown);
             }
         }
 
-        static void ChatModule(object sender, MessageEventArgs e) {
+        private static void ChatModule(object sender, MessageEventArgs e) {
             if (e.Message == null || e.Message.Type != MessageType.TextMessage) return;
             string message = e.Message?.Text;
             if (config.TriggerAnswers == null) return;
@@ -60,19 +79,16 @@ namespace Jun {
             });
         }
 
-        private static async void ChatSendResponse(List<string> answers, long chatId, ParseMode parseMode) {
-            int pick = new Random().Next(answers.Count);
-            await Bot.SendTextMessageAsync(chatId, answers[pick], parseMode: parseMode);
-        }
-
-        static async void ChatModuleAdministration(object sender, MessageEventArgs e) {
+        private static async void ChatModuleAdministration(object sender, MessageEventArgs e) {
             var message = e.Message.Text.ToLower();
             Stopwatch s = new Stopwatch();
             if (e.Message == null || e.Message.Type != MessageType.TextMessage || e.Message.From.Id != config.MasterID) return;
 
             s.Start();
+
             #region ADD
-            //                                       triggers                        answers                 
+
+            //                                       triggers                        answers
             //syntax: /chatmodule <command> <argument list separed by \> | <argument list separed by \> | <master only> / <parse mode>
             if (Regex.IsMatch(message, @"(\/chatmodule add )([^|]+)\|([^|]+)\|{0,1}(true|false){0,1}\|(none|html|markdown){0,1}", RegexOptions.IgnoreCase)) {
                 var match = Regex.Match(e.Message.Text, @"(\/chatmodule add )([^|]+)\|([^|]+)\|{0,1}(all|masteronly|notmaster){0,1}\|(none|html|markdown){0,1}", RegexOptions.IgnoreCase);
@@ -85,22 +101,28 @@ namespace Jun {
                 System.IO.File.WriteAllText("bot.cfg", JsonConvert.SerializeObject(config, Formatting.Indented));
                 await Bot.SendTextMessageAsync(e.Message.Chat.Id, "Aggiunto alla configurazione con successo!, Tempo richiesto per l'operazione: " + s.ElapsedMilliseconds + "ms");
             }
-            #endregion
+
+            #endregion ADD
+
             s.Restart();
 
             #region Reload
+
             if (Regex.IsMatch(message, @"(\/chatmodule reload)", RegexOptions.IgnoreCase)) {
                 await Bot.SendTextMessageAsync(e.Message.Chat.Id, "Ok master, ricarico subito la configurazione!");
                 LoadSettings();
                 await Bot.SendTextMessageAsync(e.Message.Chat.Id, "Fatto!, Tempo richiesto per l'operazione: " + s.ElapsedMilliseconds + "ms");
             }
-            #endregion
+
+            #endregion Reload
+
             s.Restart();
 
             #region Remove
+
             if (Regex.IsMatch(message, @"(\/chatmodule remove )([^|]+)\|", RegexOptions.IgnoreCase)) {
                 var match = Regex.Match(e.Message.Text, @"(\/chatmodule remove )([^|]+)\|", RegexOptions.IgnoreCase);
-                for (int i = 0; i < config.TriggerAnswers.Count-1; i++) {
+                for (int i = 0; i < config.TriggerAnswers.Count - 1; i++) {
                     foreach (var trigger in config.TriggerAnswers[i].Triggers) {
                         if (trigger == match.Groups[2].Value) {
                             config.TriggerAnswers.Remove(config.TriggerAnswers[i]);
@@ -108,10 +130,14 @@ namespace Jun {
                         }
                     }
                 }
-                System.IO.File.WriteAllText("bot.cfg", JsonConvert.SerializeObject(config, Formatting.Indented));    
+                System.IO.File.WriteAllText("bot.cfg", JsonConvert.SerializeObject(config, Formatting.Indented));
             }
-            #endregion
+
+            #endregion Remove
+
             s.Stop();
+
+            #region Stats
 
             if (Regex.IsMatch(message, @"(\/chatmodule stats)", RegexOptions.IgnoreCase)) {
                 int total_triggers = 0;
@@ -121,59 +147,53 @@ namespace Jun {
                     total_answers += pair.Answers.Count;
                     total_triggers += pair.Triggers.Count;
                 }
-                await Bot.SendTextMessageAsync(e.Message.Chat.Id, String.Format("Momento di statistica...\n*Numero di trigger* `{0}`\n*Numero di risposte* `{1}`\n*Dimensione file configurazione* `{2}`B", total_triggers, total_answers, config_size),parseMode: ParseMode.Markdown);
+                await Bot.SendTextMessageAsync(e.Message.Chat.Id, String.Format("Momento di statistica...\n*Numero di trigger* `{0}`\n*Numero di risposte* `{1}`\n*Dimensione file configurazione* `{2}`B", total_triggers, total_answers, config_size), parseMode: ParseMode.Markdown);
             }
+
+            #endregion Stats
         }
 
-        static async void AutoUpdate(object sender, MessageEventArgs e) {
+        private static async void ChatSendResponse(List<string> answers, long chatId, ParseMode parseMode) {
+            int pick = new Random().Next(answers.Count);
+            await Bot.SendTextMessageAsync(chatId, answers[pick], parseMode: parseMode);
+        }
+
+        private static async void UptimeCmd(object sender, MessageEventArgs e) {
             if (e.Message == null || e.Message.Type != MessageType.TextMessage) return;
             string message = e.Message?.Text;
-            if (message?.ToLower() == "/autoupdate" && e.Message.From.Id == config.MasterID) {
-                await Bot.SendTextMessageAsync(e.Message.Chat.Id, "Beginning autoupdate procedure! \n *NOTE:* _This is a stub and will change soon_", parseMode: ParseMode.Markdown);
-
+            if (message == "/uptime") {
+                await Bot.SendTextMessageAsync(e.Message.Chat.Id, String.Format("Sono online da: `{0}`d `{1}`h `{2}`m `{3}`s", Uptime.Elapsed.Days, Uptime.Elapsed.Hours, Uptime.Elapsed.Minutes, Uptime.Elapsed.Seconds), parseMode: ParseMode.Markdown);
             }
         }
-
-        //checks if the token file exists and reads it, otherwise creates it.
-        static bool LoadSettings() {
-            if (System.IO.File.Exists("bot.cfg")) {
-                try {
-                    string cfg = System.IO.File.ReadAllText("bot.cfg");
-                    config = JsonConvert.DeserializeObject<Settings>(cfg);
-                    if (config.TriggerAnswers == null) config.TriggerAnswers = new List<TriggerAnswer>();
-                } catch (JsonReaderException) {
-                    System.IO.File.Delete("bot.cfg");
-                    return false;
-                }
-            } else {
-                System.IO.File.AppendAllText("bot.cfg", JsonConvert.SerializeObject(new Settings("token here", 0), Formatting.Indented));
-                return false;
-            }
-            return true;
-        }
-
 
         #region string extensions
-        static CommandRestiction ToRestriction(this string s) {
+
+        private static CommandRestiction ToRestriction(this string s) {
             switch (s.ToLower()) {
                 case "masteronly":
                     return CommandRestiction.MasterOnly;
+
                 case "notmaster":
                     return CommandRestiction.NotMaster;
+
                 default:
                     return CommandRestiction.All;
             }
         }
-        static ParseMode ToParseMode(this string s) {
+
+        private static ParseMode ToParseMode(this string s) {
             switch (s.ToLower()) {
                 case "html":
                     return ParseMode.Html;
+
                 case "markdown":
                     return ParseMode.Markdown;
+
                 default:
                     return ParseMode.Default;
             }
         }
-        #endregion
+
+        #endregion string extensions
     }
 }
