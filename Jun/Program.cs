@@ -10,7 +10,7 @@ using Telegram.Bot.Types.Enums;
 
 namespace Jun {
 
-    internal static class MainClass {
+    internal static class MainClass {//TODO general cleanup is required here.
         private static Settings config;
         private static TelegramBotClient Bot;
         private static Stopwatch Uptime = new Stopwatch();
@@ -50,7 +50,7 @@ namespace Jun {
                 return false;
             }
             return true;
-        }
+        }//TODO move this to a settings manager class
 
         private static async void AutoUpdate(object sender, MessageEventArgs e) {
             if (e.Message == null || e.Message.Type != MessageType.Text) return;
@@ -58,7 +58,7 @@ namespace Jun {
             if (message?.ToLower() == "/autoupdate" && e.Message.From.Id == config.MasterID) {
                 await Bot.SendTextMessageAsync(e.Message.Chat.Id, "Beginning autoupdate procedure! \n *NOTE:* _This is a stub and will change soon_", parseMode: ParseMode.Markdown);
             }
-        }
+        }//TODO move this to a "self-update" class
 
         private static void ChatModule(object sender, MessageEventArgs e) {
             if (e.Message == null || e.Message.Type != MessageType.Text) return;
@@ -77,7 +77,7 @@ namespace Jun {
                     }
                 }
             });
-        }
+        }//TODO move this and  ChatMouleAdministration method to a "ChatModule" class
 
         private static async void ChatModuleAdministration(object sender, MessageEventArgs e) {
             var message = e.Message.Text.ToLower();
