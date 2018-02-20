@@ -1,9 +1,9 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using Telegram.Bot;
 using Telegram.Bot.Args;
 using Telegram.Bot.Types.Enums;
@@ -18,8 +18,8 @@ namespace Jun {
         public static void Main(string[] args) {
             Console.WriteLine("Starting TelegramBot");
             if (!LoadSettings()) return;
-            Bot = new TelegramBotClient(config?.Token);
-            //COMMAND REGISTRATION
+
+            Bot = new TelegramBotClient(config?.Token);//COMMAND REGISTRATION
             Console.WriteLine("Registering commands");
             Bot.OnMessage += ChatModule;
             Bot.OnMessage += ChatModuleAdministration;
@@ -53,7 +53,7 @@ namespace Jun {
         }
 
         private static async void AutoUpdate(object sender, MessageEventArgs e) {
-            if (e.Message == null || e.Message.Type != MessageType.TextMessage) return;
+            if (e.Message == null || e.Message.Type != MessageType.Text) return;
             string message = e.Message?.Text;
             if (message?.ToLower() == "/autoupdate" && e.Message.From.Id == config.MasterID) {
                 await Bot.SendTextMessageAsync(e.Message.Chat.Id, "Beginning autoupdate procedure! \n *NOTE:* _This is a stub and will change soon_", parseMode: ParseMode.Markdown);
@@ -61,7 +61,7 @@ namespace Jun {
         }
 
         private static void ChatModule(object sender, MessageEventArgs e) {
-            if (e.Message == null || e.Message.Type != MessageType.TextMessage) return;
+            if (e.Message == null || e.Message.Type != MessageType.Text) return;
             string message = e.Message?.Text;
             if (config.TriggerAnswers == null) return;
             Parallel.ForEach(config.TriggerAnswers, (currTrigger) => {
@@ -82,7 +82,7 @@ namespace Jun {
         private static async void ChatModuleAdministration(object sender, MessageEventArgs e) {
             var message = e.Message.Text.ToLower();
             Stopwatch s = new Stopwatch();
-            if (e.Message == null || e.Message.Type != MessageType.TextMessage || e.Message.From.Id != config.MasterID) return;
+            if (e.Message == null || e.Message.Type != MessageType.Text || e.Message.From.Id != config.MasterID) return;
 
             s.Start();
 
@@ -159,7 +159,7 @@ namespace Jun {
         }
 
         private static async void UptimeCmd(object sender, MessageEventArgs e) {
-            if (e.Message == null || e.Message.Type != MessageType.TextMessage) return;
+            if (e.Message == null || e.Message.Type != MessageType.Text) return;
             string message = e.Message?.Text;
             if (message == "/uptime") {
                 await Bot.SendTextMessageAsync(e.Message.Chat.Id, String.Format("Sono online da: `{0}`d `{1}`h `{2}`m `{3}`s", Uptime.Elapsed.Days, Uptime.Elapsed.Hours, Uptime.Elapsed.Minutes, Uptime.Elapsed.Seconds), parseMode: ParseMode.Markdown);
